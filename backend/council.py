@@ -3,6 +3,7 @@
 from typing import List, Dict, Any, Tuple
 from .openrouter import query_models_parallel, query_model
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .semantic_similarity import calculate_batch_cosine_similarity, get_relevance_scores
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -35,7 +36,7 @@ async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
 async def stage2_collect_rankings(
     user_query: str,
     stage1_results: List[Dict[str, Any]]
-) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
+) -> Tuple[List[Dict[str, Any]], Dict[str, str], Dict]:
     """
     Stage 2: Each model ranks the anonymized responses.
 
@@ -50,10 +51,33 @@ async def stage2_collect_rankings(
     labels = [chr(65 + i) for i in range(len(stage1_results))]  # A, B, C, ...
 
     # Create mapping from label to model name
+    # Existing code just above this:
     label_to_model = {
         f"Response {label}": result['model']
         for label, result in zip(labels, stage1_results)
     }
+
+    print("[Stage2] Running semantic similarity...")
+    # ADD this block right here:
+    response_texts = [r["response"] for r in stage1_results]
+    response_labels = [f"Response {label}" for label in labels]
+    sim_matrix = calculate_batch_cosine_similarity(response_texts)
+    relevance = get_relevance_scores(response_texts, user_query)
+    semantic_data = {
+        "pairwise_matrix": {
+            response_labels[i]: {
+                response_labels[j]: round(float(sim_matrix[i][j]), 4)
+                for j in range(len(response_labels))
+            }
+            for i in range(len(response_labels))
+        },
+        "relevance_to_query": {
+            response_labels[i]: round(float(relevance[i]), 4)
+            for i in range(len(response_labels))
+        }
+    }
+    print("[Stage2] Semantic similarity done.")
+
 
     # Build the ranking prompt
     responses_text = "\n\n".join([
@@ -95,7 +119,9 @@ Now provide your evaluation and ranking:"""
     messages = [{"role": "user", "content": ranking_prompt}]
 
     # Get rankings from all council models in parallel
+    print("[Stage2] Sending ranking prompts to models...")
     responses = await query_models_parallel(COUNCIL_MODELS, messages)
+    print(f"[Stage2] Got {len(responses)} ranking responses back.")
 
     # Format results
     stage2_results = []
@@ -109,7 +135,7 @@ Now provide your evaluation and ranking:"""
                 "parsed_ranking": parsed
             })
 
-    return stage2_results, label_to_model
+    return stage2_results, label_to_model, semantic_data
 
 
 async def stage3_synthesize_final(
@@ -314,7 +340,7 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
         }, {}
 
     # Stage 2: Collect rankings
-    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results)
+    stage2_results, label_to_model, semantic_data = await stage2_collect_rankings(user_query, stage1_results)
 
     # Calculate aggregate rankings
     aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
@@ -329,7 +355,8 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
     # Prepare metadata
     metadata = {
         "label_to_model": label_to_model,
-        "aggregate_rankings": aggregate_rankings
+        "aggregate_rankings": aggregate_rankings,
+        "semantic_similarity_scores": semantic_data
     }
 
     return stage1_results, stage2_results, stage3_result, metadata

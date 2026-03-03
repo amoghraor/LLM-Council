@@ -79,7 +79,13 @@ export default function ChatInterface({
                       <span>Running Stage 1: Collecting individual responses...</span>
                     </div>
                   )}
-                  {msg.stage1 && <Stage1 responses={msg.stage1} />}
+                  {msg.stage1 && (
+                    <Stage1 
+                      responses={msg.stage1}
+                      semanticScores={msg.metadata?.semantic_similarity_scores}
+                      labelToModel={msg.metadata?.label_to_model}
+                    />
+                  )}
 
                   {/* Stage 2 */}
                   {msg.loading?.stage2 && (
@@ -93,6 +99,7 @@ export default function ChatInterface({
                       rankings={msg.stage2}
                       labelToModel={msg.metadata?.label_to_model}
                       aggregateRankings={msg.metadata?.aggregate_rankings}
+                      semanticScores={msg.metadata?.semantic_similarity_scores}
                     />
                   )}
 
@@ -103,7 +110,14 @@ export default function ChatInterface({
                       <span>Running Stage 3: Final synthesis...</span>
                     </div>
                   )}
-                  {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
+                  {msg.stage3 && (
+                    <Stage3 
+                      finalResponse={msg.stage3}
+                      semanticScores={msg.metadata?.semantic_similarity_scores}
+                      labelToModel={msg.metadata?.label_to_model}
+                      aggregateRankings={msg.metadata?.aggregate_rankings}
+                    />
+                  )}
                 </div>
               )}
             </div>

@@ -1,52 +1,192 @@
-# LLM Council
+# LLM Council (Enhanced with Semantic Similarity)
 
-![llmcouncil](header.jpg)
 
-The idea of this repo is that instead of asking a question to your favorite LLM provider (e.g. OpenAI GPT 5.1, Google Gemini 3.0 Pro, Anthropic Claude Sonnet 4.5, xAI Grok 4, eg.c), you can group them into your "LLM Council". This repo is a simple, local web app that essentially looks like ChatGPT except it uses OpenRouter to send your query to multiple LLMs, it then asks them to review and rank each other's work, and finally a Chairman LLM produces the final response.
 
-In a bit more detail, here is what happens when you submit a query:
+Instead of asking a single LLM for answers, this project lets you create your own **LLM Council**.
 
-1. **Stage 1: First opinions**. The user query is given to all LLMs individually, and the responses are collected. The individual responses are shown in a "tab view", so that the user can inspect them all one by one.
-2. **Stage 2: Review**. Each individual LLM is given the responses of the other LLMs. Under the hood, the LLM identities are anonymized so that the LLM can't play favorites when judging their outputs. The LLM is asked to rank them in accuracy and insight.
-3. **Stage 3: Final response**. The designated Chairman of the LLM Council takes all of the model's responses and compiles them into a single final answer that is presented to the user.
+Multiple large language models are queried in parallel, asked to evaluate each other anonymously, and then a designated Chairman model synthesizes a final response.
 
-## Vibe Code Alert
+This version extends the original idea by integrating **semantic similarity analysis** using sentence embeddings and cosine similarity. The result is a more transparent, measurable, and insightful multi-model system.
 
-This project was 99% vibe coded as a fun Saturday hack because I wanted to explore and evaluate a number of LLMs side by side in the process of [reading books together with LLMs](https://x.com/karpathy/status/1990577951671509438). It's nice and useful to see multiple responses side by side, and also the cross-opinions of all LLMs on each other's outputs. I'm not going to support it in any way, it's provided here as is for other people's inspiration and I don't intend to improve it. Code is ephemeral now and libraries are over, ask your LLM to change it in whatever way you like.
+---
 
-## Setup
+# Overview
 
-### 1. Install Dependencies
+When a user submits a query, the system runs through three stages:
 
-The project uses [uv](https://docs.astral.sh/uv/) for project management.
+---
 
-**Backend:**
+## Stage 1 — First Opinions
+
+Each council model receives the query independently.
+
+- Responses are displayed in a tab view.
+- Each response is compared semantically to the original query.
+- Cosine similarity is used to measure relevance.
+- The most relevant response is highlighted with:
+  - A star badge
+  - “Most Relevant to Query” label
+
+This immediately shows which model understood the query most closely.
+
+---
+
+## Stage 2 — Peer Review + Semantic Analysis
+
+Each model anonymously evaluates and ranks the other responses.
+
+In addition, the backend computes:
+
+### Semantic Relevance Scores
+- Cosine similarity between each response and the query.
+- Displayed as a relevance bar chart.
+
+### Similarity Heatmap
+- Pairwise cosine similarity between all responses.
+- Reveals redundancy vs uniqueness.
+- Highlights model agreement and disagreement.
+
+### Aggregate Rankings
+- Average ranking position across peer evaluations.
+
+This stage combines:
+- LLM peer judgment
+- Mathematical semantic scoring
+- Cross-model consensus
+
+---
+
+## Stage 3 — Chairman Synthesis
+
+The Chairman LLM synthesizes the final answer using:
+
+- All Stage 1 responses
+- Peer rankings
+- Semantic similarity signals
+
+An insight banner summarizes:
+
+- Most relevant response and its score
+- Average relevance across responses
+- Response diversity level (High / Moderate / Low)
+- Explanation of how semantic similarity influenced the final synthesis
+
+This makes the reasoning process transparent and measurable.
+
+---
+
+# Semantic Similarity Engine
+
+A new module introduces quantitative semantic evaluation.
+
+### What It Does
+
+- Generates sentence embeddings using a transformer model
+- Computes cosine similarity:
+  - Query ↔ Response (relevance)
+  - Response ↔ Response (diversity)
+- Produces:
+  - Relevance scores
+  - Similarity matrix
+  - Diversity metrics
+
+### Why It Matters
+
+The original council relied only on LLM reasoning.  
+This version blends:
+
+- Model-based evaluation  
+- Mathematical semantic similarity  
+- Diversity detection  
+
+The system becomes more explainable and less redundant.
+
+---
+
+# Backend Structure
+
+### `config.py`
+- Council model configuration
+- Chairman model configuration
+- Semantic model identifier
+- Uses `OPENROUTER_API_KEY`
+- Runs on port 8001
+
+### `openrouter.py`
+- Async model querying
+- Parallel execution with graceful degradation
+
+### `council.py`
+- Stage 1 response collection
+- Stage 2 anonymized peer ranking
+- Stage 3 final synthesis
+- Aggregate ranking computation
+- Integration of semantic similarity scoring
+
+### `semantic_similarity.py`
+- Embedding generation
+- Cosine similarity calculation
+- Batch similarity matrix computation
+
+### `storage.py`
+- JSON-based conversation persistence
+
+### `main.py`
+- FastAPI application
+- Streams stage updates
+- Returns semantic similarity metadata
+
+---
+
+# Frontend Enhancements
+
+### Stage 1
+- Star badge for most relevant response
+- Golden highlight styling
+
+### Stage 2
+- Relevance bar chart
+- Similarity heatmap
+
+### Stage 3
+- Gradient insight banner
+- Diversity indicators
+- Semantic transparency explanation
+
+---
+
+# Setup
+
+## 1. Install Dependencies
+
+Backend:
+
 ```bash
 uv sync
 ```
-
-**Frontend:**
+Frontend:
 ```bash
 cd frontend
 npm install
 cd ..
 ```
+## 2. Configure API Key
 
-### 2. Configure API Key
-
-Create a `.env` file in the project root:
-
+Create a .env file:
 ```bash
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
+Get your API key from openrouter.ai.
 
-Get your API key at [openrouter.ai](https://openrouter.ai/). Make sure to purchase the credits you need, or sign up for automatic top up.
+## 3. Configure Council Models (Optional)
 
-### 3. Configure Models (Optional)
 
-Edit `backend/config.py` to customize the council:
-
-```python
+Edit:
+```bash
+backend/config.py
+```
+Example:
+```bash
 COUNCIL_MODELS = [
     "openai/gpt-5.1",
     "google/gemini-3-pro-preview",
@@ -59,29 +199,56 @@ CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
 
 ## Running the Application
 
-**Option 1: Use the start script**
+**Option 1:**
 ```bash
 ./start.sh
 ```
+**Option 2:**
 
-**Option 2: Run manually**
-
-Terminal 1 (Backend):
+Backend:
 ```bash
 uv run python -m backend.main
 ```
-
-Terminal 2 (Frontend):
+Frontend:
 ```bash
 cd frontend
 npm run dev
 ```
 
-Then open http://localhost:5173 in your browser.
 
-## Tech Stack
+**Open:**
+```bash
+http://localhost:5173
+```
+**Backend runs on:**
+```bash
+http://localhost:8001
+```
 
-- **Backend:** FastAPI (Python 3.10+), async httpx, OpenRouter API
-- **Frontend:** React + Vite, react-markdown for rendering
-- **Storage:** JSON files in `data/conversations/`
-- **Package Management:** uv for Python, npm for JavaScript
+# Tech Stack
+
+## Backend
+- FastAPI  
+- OpenRouter API  
+- Sentence-Transformers  
+- NumPy  
+- Cosine Similarity  
+
+## Frontend
+- React + Vite  
+- Data visualizations  
+- Markdown rendering  
+
+## Storage
+- JSON-based conversations  
+
+
+---
+
+# Acknowledgement
+
+This project builds upon the original LLM Council concept created by [Andrej Karpathy](https://github.com/karpathy/llm-council).  The base idea and inspiration come from his public repository and experiments with evaluating multiple LLMs side by side.
+
+This version extends the original work by integrating semantic similarity, cosine similarity analysis, and visualization features to enhance transparency, diversity measurement, and response relevance evaluation.
+
+The original spirit of rapid experimentation and exploration has been preserved while adding structured semantic analysis to make the system more explainable and measurable.

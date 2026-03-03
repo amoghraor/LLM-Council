@@ -1,7 +1,35 @@
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   line-height: 1.5;
   font-weight: 400;
+
+  /* Professional Color Palette */
+  --primary-blue: #4F46E5;
+  --primary-blue-hover: #4338CA;
+  --primary-blue-light: #EEF2FF;
+  --secondary-purple: #7C3AED;
+  --accent-teal: #14B8A6;
+  --accent-amber: #F59E0B;
+  
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
+  
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  
+  --border-light: #E5E7EB;
+  --border-medium: #D1D5DB;
+  
+  --success-green: #10B981;
+  --warning-orange: #F59E0B;
+  --error-red: #EF4444;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,7 +47,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 #root {
@@ -35,6 +64,7 @@ body {
 
 .markdown-content p {
   margin: 0 0 12px 0;
+  line-height: 1.7;
 }
 
 .markdown-content p:last-child {
@@ -47,7 +77,10 @@ body {
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-  margin: 16px 0 8px 0;
+  margin: 20px 0 12px 0;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .markdown-content h1:first-child,
@@ -59,40 +92,86 @@ body {
   margin-top: 0;
 }
 
+.markdown-content h1 { font-size: 1.875rem; }
+.markdown-content h2 { font-size: 1.5rem; }
+.markdown-content h3 { font-size: 1.25rem; }
+.markdown-content h4 { font-size: 1.125rem; }
+
 .markdown-content ul,
 .markdown-content ol {
   margin: 0 0 12px 0;
-  padding-left: 24px;
+  padding-left: 28px;
 }
 
 .markdown-content li {
-  margin: 4px 0;
+  margin: 6px 0;
+  line-height: 1.6;
 }
 
 .markdown-content pre {
-  background: #f5f5f5;
-  padding: 12px;
-  border-radius: 4px;
+  background: var(--bg-tertiary);
+  padding: 16px;
+  border-radius: 8px;
   overflow-x: auto;
   margin: 0 0 12px 0;
+  border: 1px solid var(--border-light);
 }
 
 .markdown-content code {
-  background: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: monospace;
-  font-size: 0.9em;
+  background: var(--bg-tertiary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 0.875em;
+  color: var(--secondary-purple);
+  font-weight: 500;
 }
 
 .markdown-content pre code {
   background: none;
   padding: 0;
+  color: var(--text-primary);
 }
 
 .markdown-content blockquote {
   margin: 0 0 12px 0;
   padding-left: 16px;
-  border-left: 4px solid #ddd;
-  color: #666;
+  border-left: 4px solid var(--primary-blue);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-content a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.markdown-content a:hover {
+  border-bottom-color: var(--primary-blue);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
 }
